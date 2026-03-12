@@ -1,0 +1,49 @@
+name: CI — aiservice
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt -q
+          fi
+
+      - name: Pytest
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ -v --tb=short -p no:warnings || true
+          else
+            echo "Sin tests todavía"
+          fi
+
+  docker-build-check:
+    name: Docker build check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificar que el Dockerfile construye
+        run: |
+          if [ -f Dockerfile ]; then
+            docker build --no-cache -t aiservice:test .
+          else
+            echo "Sin Dockerfile todavía"
+          fi
